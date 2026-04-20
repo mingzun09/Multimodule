@@ -1,4 +1,4 @@
-# All-in-one-module
+# Multimodule
 Module system is made to be modular and customizable
 
 ## 如何使用该模块
