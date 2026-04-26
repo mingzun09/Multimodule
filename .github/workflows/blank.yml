@@ -38,7 +38,7 @@ jobs:
         cd build_temp
         
         # 设置压缩包名称
-        ZIP_NAME="All-in-one-module_${{ inputs.version }}.zip"
+        ZIP_NAME="Multimodule_${{ inputs.version }}.zip"
         
         # 创建压缩包（只包含目录内容，不包含build_temp本身）
         zip -r -9 "../$ZIP_NAME" .
