@@ -142,7 +142,6 @@ else
   ui_print "  ⚠ The APK directory to be installed was not detected"
 fi
 
-# ================= 新增的代码段开始 =================
 ui_print "- Installing shamiko.sh to service.d..."
 if [ -f "$MODPATH/shamiko.sh" ]; then
   mkdir -p /data/adb/service.d
@@ -152,7 +151,6 @@ if [ -f "$MODPATH/shamiko.sh" ]; then
 else
   ui_print "  ⚠ shamiko.sh not found in module root!"
 fi
-# ================= 新增的代码段结束 =================
 
 ui_print "😋All processes deal with done！"
 ui_print "- Please reboot to apply to take effect. -"
