@@ -1,11 +1,9 @@
-id=All-in-one-module
-name=All-in-one-module
-version=v2.0
-versionCode=20250625
+id=Multimodule
+name=Multimodule
+version=v2.0.2
+versionCode=20260502
 author=mingzun09
 description=Module system is made to be modular and customizable
-support=24.0      # Magisk最低v24.0
-minApi=30         # Android 11 (API 30)
 needRamdisk=false
 template=17000
-projectUrl=https://github.com/mingzun09/All-in-one-module
+projectUrl=https://github.com/mingzun09/Multimodule
