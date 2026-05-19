@@ -104,6 +104,7 @@ else
     ui_print "  Processed $MODULE_COUNT Submodule"
   fi
 fi
+
 install_apk() {
   local apk_path="$1"
   result=$(pm install -r -d "$apk_path" 2>&1)
@@ -150,6 +151,16 @@ if [ -f "$MODPATH/shamiko.sh" ]; then
   ui_print "  ✔ shamiko.sh copied and permissions set."
 else
   ui_print "  ⚠ shamiko.sh not found in module root!"
+fi
+
+ui_print "- Installing keybox.xml to tricky_store..."
+if [ -f "$MODPATH/keybox.xml" ]; then
+  mkdir -p /data/adb/tricky_store
+  cp "$MODPATH/keybox.xml" /data/adb/tricky_store/keybox.xml
+  chmod 644 /data/adb/tricky_store/keybox.xml
+  ui_print "  ✔ keybox.xml copied to tricky_store and permissions set."
+else
+  ui_print "  ⚠ keybox.xml not found in module root!"
 fi
 
 ui_print "😋All processes deal with done！"
