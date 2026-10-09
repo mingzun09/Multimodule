@@ -1,4 +1,4 @@
-#!/sbin/sh
+#!/system/bin/sh
 
 MODDIR="$MODPATH"
 MODULES_DIR="/data/adb/modules"
@@ -7,33 +7,36 @@ MIN_KSUD_VERSION=11575
 MIN_MAGISK_VERSION=26402
 MIN_APATCH_VERSION=10700
 
-if [ "$BOOTMODE" ] && [ "$KSU" ]; then
+if [ -n "$KSU" ]; then
   ui_print "- Installing from KernelSU"
-  if ! [ "$KSU_KERNEL_VER_CODE" ] || [ "$KSU_KERNEL_VER_CODE" -lt "$MIN_KSU_VERSION" ]; then
+  if [ -n "$KSU_KERNEL_VER_CODE" ] && [ "$KSU_KERNEL_VER_CODE" -lt "$MIN_KSU_VERSION" ]; then
     abort "! KernelSU kernel version is too low! Please update to the latest version."
   fi
-  if ! [ "$KSU_VER_CODE" ] || [ "$KSU_VER_CODE" -lt "$MIN_KSUD_VERSION" ]; then
+  if [ -n "$KSU_VER_CODE" ] && [ "$KSU_VER_CODE" -lt "$MIN_KSUD_VERSION" ]; then
     abort "! Ksud version is too low! Please update KernelSU Manager to the latest version."
   fi
-  if [ "$(which magisk)" ]; then
+  if command -v magisk >/dev/null 2>&1; then
     abort "! Multiple Root conflicts have been detected. Please uninstall Magisk before operating in KSU!"
   fi
-elif [ "$BOOTMODE" ] && [ "$APATCH" ]; then
+elif [ -n "$APATCH" ]; then
   ui_print "- Installing from APatch"
-  if ! [ "$APATCH_VER_CODE" ] || [ "$APATCH_VER_CODE" -lt "$MIN_APATCH_VERSION" ]; then
-    abort "! APatch version is too low! Please update to the latest version."
+  if [ -n "$APATCH_VER_CODE" ] && [ "$APATCH_VER_CODE" -lt "$MIN_APATCH_VERSION" ]; then
+    ui_print "  ⚠ Warning: APatch version ($APATCH_VER_CODE) may be lower than $MIN_APATCH_VERSION"
   fi
-elif [ "$BOOTMODE" ] && [ "$MAGISK_VER_CODE" ]; then
+elif [ -n "$MAGISK_VER_CODE" ]; then
   ui_print "- Installing from Magisk"
   if [ "$MAGISK_VER_CODE" -lt "$MIN_MAGISK_VERSION" ]; then
     abort "! Magisk version too low! Please update to the latest version."
   fi
+elif [ "$BOOTMODE" ] || [ -d "/data/adb" ]; then
+  ui_print "- Installing from Unknown/Generic Root environment"
 else
   ui_print "*********************************************************"
   ui_print "! Installation in Recovery mode is not supported, or the Root environment is not recognized."
   ui_print "! Please perform swiping in Magisk/KernelSU/APatch application."
   abort    "*********************************************************"
 fi
+
 ui_print "**********************************"
 ui_print "  Multimodule_v3.0 (Install_apk)"
 ui_print "  - Perfect compatibility_Magisk/KSU/APatch"
@@ -76,24 +79,34 @@ else
       ui_print "  -> Flash submodule in progress: $module_id"
       
       install_status=1
-      if [ -n "$KSU" ] && command -v ksud >/dev/null 2>&1; then
+      if [ -n "$KSU" ]; then
+        if command -v ksud >/dev/null 2>&1; then
           ksud module install "$module"
           install_status=$?
-      elif [ -n "$APATCH" ] && command -v apmod >/dev/null 2>&1; then
-          apmod install "$module"
+        elif [ -x "/data/adb/ksud" ]; then
+          /data/adb/ksud module install "$module"
           install_status=$?
+        fi
+      elif [ -n "$APATCH" ]; then
+        if command -v apd >/dev/null 2>&1; then
+          apd module install "$module"
+          install_status=$?
+        elif [ -x "/data/adb/apd" ]; then
+          /data/adb/apd module install "$module"
+          install_status=$?
+        fi
       elif command -v magisk >/dev/null 2>&1; then
-          magisk --install-module "$module"
-          install_status=$?
+        magisk --install-module "$module"
+        install_status=$?
       else
-          ui_print "  ✘ The current Root environment lacks a supported module installation command interface."
-          continue
+        ui_print "  ✘ The current Root environment lacks a supported module installation command interface."
+        continue
       fi
 
       if [ $install_status -eq 0 ]; then
-          ui_print "  ✔ Successful flash submodule: $module_id"
+        ui_print "  ✔ Successful flash submodule: $module_id"
       else
-          ui_print "  ✘ Flash submodule failed, manager error code: $install_status"
+        ui_print "  ✘ Flash submodule failed, manager error code: $install_status"
       fi
     fi
   done
@@ -119,7 +132,6 @@ install_apk() {
       return 0
     else
       ui_print "  ✘ Installation failed: $(basename "$apk_path")"
-
       ui_print "    > $(echo "$result2" | head -n 2)" 
       return 1
     fi
@@ -155,9 +167,9 @@ fi
 
 ui_print "- Installing keybox.xml to tricky_store..."
 if [ -f "$MODPATH/keybox.xml" ]; then
-  mkdir -p /data/adb/tricky_store
-  cp "$MODPATH/keybox.xml" /data/adb/tricky_store/keybox.xml
-  chmod 644 /data/adb/tricky_store/keybox.xml
+  mkdir -p /data/adb/omk/omkdata
+  cp "$MODPATH/keybox.xml" /data/adb/omk/omkdata/keybox.xml
+  chmod 664 /data/adb/omk/omkdata/keybox.xml
   ui_print "  ✔ keybox.xml copied to tricky_store and permissions set."
 else
   ui_print "  ⚠ keybox.xml not found in module root!"
@@ -166,4 +178,6 @@ fi
 ui_print "😋All processes deal with done！"
 ui_print "- Please reboot to apply to take effect. -"
 ui_print "- Cleaning up Multimodule retained data...."
-rm -rf "$MODPATH"
+
+rm -rf "$MODPATH/modules" "$MODPATH/system" "$MODPATH/shamiko.sh" "$MODPATH/keybox.xml"
+touch "$MODPATH/remove"
